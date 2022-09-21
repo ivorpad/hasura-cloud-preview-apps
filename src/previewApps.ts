@@ -176,7 +176,9 @@ export const pollPreviewAppCreationJob = async (
     if (response.jobs_by_pk.status === 'success') {
       const successEvent = findLast(propEq('event_type', 'success'))(
         response.jobs_by_pk.tasks[0].task_events
-      )
+      );
+      
+      context.logger.log(`Preview app created successfully: ${JSON.stringify(successEvent)}`)
 
       if (!successEvent) {
         throw new Error('unexpected; no job success task event')
