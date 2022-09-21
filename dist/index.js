@@ -29569,13 +29569,15 @@ const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
     const project = yield (0, tasks_1.getProjectByPk)(previewAppCreationMetadata.projectId, context);
     const tenantId = project.tenant.id;
     if (tenantId) {
-        const tenant = yield (0, tasks_1.getTenantEnvByTenantId)(tenantId, context);
-        const adminSecretFromTenant = tenant.envVars.find(e => e['key'] === 'HASURA_GRAPHQL_ADMIN_SECRET');
+        // const tenant = await getTenantEnvByTenantId(tenantId, context)
+        // const adminSecretFromTenant = tenant.envVars.find(
+        //   e => e['key'] === 'HASURA_GRAPHQL_ADMIN_SECRET'
+        // )
         const postgresFromEnv = (0, parameters_1.getHasuraEnvVars)(core.getInput('hasuraEnv')).find(e => e['key'] === 'PG_ENV_VARS_FOR_HASURA');
         yield fetch(`${project.endpoint}/v1/metadata`, {
             headers: {
                 'content-type': 'application/json',
-                'x-hasura-admin-secret': adminSecretFromTenant
+                'x-hasura-admin-secret': adminSecret === null || adminSecret === void 0 ? void 0 : adminSecret.value
             },
             body: JSON.stringify({
                 type: 'bulk',

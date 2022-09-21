@@ -61,10 +61,10 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
   const tenantId = project.tenant.id
 
   if (tenantId) {
-    const tenant = await getTenantEnvByTenantId(tenantId, context)
-    const adminSecretFromTenant = tenant.envVars.find(
-      e => e['key'] === 'HASURA_GRAPHQL_ADMIN_SECRET'
-    )
+    // const tenant = await getTenantEnvByTenantId(tenantId, context)
+    // const adminSecretFromTenant = tenant.envVars.find(
+    //   e => e['key'] === 'HASURA_GRAPHQL_ADMIN_SECRET'
+    // )
 
     const postgresFromEnv:
       | {key: string; value: string}
@@ -75,7 +75,7 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
     await fetch(`${project.endpoint}/v1/metadata`, {
       headers: {
         'content-type': 'application/json',
-        'x-hasura-admin-secret': adminSecretFromTenant
+        'x-hasura-admin-secret': adminSecret?.value as string
       },
       body: JSON.stringify({
         type: 'bulk',
