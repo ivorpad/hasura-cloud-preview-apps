@@ -34,7 +34,8 @@
     "@actions/core": "^1.5.0",
     "@jsier/retrier": "^1.2.4",
     "node-fetch": "^3.0.0",
-    "pg": "^8.7.1"
+    "pg": "^8.7.1",
+    "ramda": "^0.28.0"
   },
   "devDependencies": {
     "@types/node": "^16.10.1",

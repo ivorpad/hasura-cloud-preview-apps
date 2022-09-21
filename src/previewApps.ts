@@ -10,6 +10,7 @@ import {
   GetPreviewAppCreationJobVariables
 } from './types'
 import {waitFor} from './utils'
+import {findLast, propEq} from 'ramda'
 
 export const createPreviewApp = async (
   context: Context
@@ -173,9 +174,10 @@ export const pollPreviewAppCreationJob = async (
     }
 
     if (response.jobs_by_pk.status === 'success') {
-      const successEvent = response.jobs_by_pk.tasks[0].task_events.find(
-        te => te.event_type === 'success'
+      const successEvent = findLast(propEq('event_type', 'success'))(
+        response.jobs_by_pk.tasks[0].task_events
       )
+
       if (!successEvent) {
         throw new Error('unexpected; no job success task event')
       }
