@@ -60,7 +60,7 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
     context
   )
 
-  const tenantId = project.tenant.id;
+  const tenantId = project?.tenant.id;
 
   context.logger.log(`Tenant:\n${JSON.stringify(tenantId, null, 2)}`)
   context.logger.log(`Project:\n${JSON.stringify(project, null, 2)}`)
@@ -115,7 +115,7 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
       // return r.json()
     })
 
-    if(response.error) {
+    if(response?.error) {
       throw new Error(response.error)
     }
 

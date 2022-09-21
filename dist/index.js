@@ -33463,7 +33463,7 @@ const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
     // if adminSecret is not found, make a request to get envVars
     const adminSecret = envVars.find(e => e['key'] === 'HASURA_GRAPHQL_ADMIN_SECRET');
     const project = yield (0, tasks_1.getProjectByPk)(previewAppCreationMetadata.projectId, context);
-    const tenantId = project.tenant.id;
+    const tenantId = project === null || project === void 0 ? void 0 : project.tenant.id;
     context.logger.log(`Tenant:\n${JSON.stringify(tenantId, null, 2)}`);
     context.logger.log(`Project:\n${JSON.stringify(project, null, 2)}`);
     if (tenantId) {
@@ -33509,7 +33509,7 @@ const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
             context.logger.log(`Response:\n${JSON.stringify(r, null, 2)}`);
             // return r.json()
         });
-        if (response.error) {
+        if (response === null || response === void 0 ? void 0 : response.error) {
             throw new Error(response.error);
         }
     }
