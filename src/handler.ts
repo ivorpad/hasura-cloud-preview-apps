@@ -47,7 +47,8 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
 
   context.logger.log(`Applying metadata and migrations from the branch...`)
 
-  const envVars = getHasuraEnvVars(core.getInput('hasuraEnv'))
+  const envVars = getHasuraEnvVars(core.getInput('hasuraEnv'));
+  const databaseDisplayName = core.getInput('hasuraDatabaseDisplayName')
   // if adminSecret is not found, make a request to get envVars
   
   const adminSecret: {key: string; value: string} | undefined = envVars.find(
@@ -76,7 +77,7 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
       e => e['key'] === 'PG_ENV_VARS_FOR_HASURA'
     )
 
-    await fetch(`${project.endpoint}/v1/metadata`, {
+   const response = await fetch(`${project.endpoint}/v1/metadata`, {
       headers: {
         'content-type': 'application/json',
         'x-hasura-admin-secret': adminSecret?.value as string
@@ -84,12 +85,11 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
       body: JSON.stringify({
         type: 'bulk',
         source: 'default',
-        resource_version: 3,
         args: [
           {
             type: 'pg_add_source',
             args: {
-              name: 'default',
+              name: databaseDisplayName,
               configuration: {
                 connection_info: {
                   database_url: {
@@ -110,7 +110,12 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
         ]
       }),
       method: 'POST'
-    })
+    }).then(r => r.json())
+
+    if(response.error) {
+      throw new Error(response.error)
+    }
+
   } else {
     context.logger.log(`Tenant ID not found. ${JSON.stringify(project, null, 2)}`)
   }

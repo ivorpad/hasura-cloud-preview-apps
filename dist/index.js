@@ -33459,6 +33459,7 @@ const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
     context.logger.log(`Preview app creation metadata:\n${JSON.stringify(previewAppCreationMetadata, null, 2)}`);
     context.logger.log(`Applying metadata and migrations from the branch...`);
     const envVars = (0, parameters_1.getHasuraEnvVars)(core.getInput('hasuraEnv'));
+    const databaseDisplayName = core.getInput('hasuraDatabaseDisplayName');
     // if adminSecret is not found, make a request to get envVars
     const adminSecret = envVars.find(e => e['key'] === 'HASURA_GRAPHQL_ADMIN_SECRET');
     const project = yield (0, tasks_1.getProjectByPk)(previewAppCreationMetadata.projectId, context);
@@ -33471,7 +33472,7 @@ const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
         //   e => e['key'] === 'HASURA_GRAPHQL_ADMIN_SECRET'
         // )
         const postgresFromEnv = (0, parameters_1.getHasuraEnvVars)(core.getInput('hasuraEnv')).find(e => e['key'] === 'PG_ENV_VARS_FOR_HASURA');
-        yield (0, isomorphic_fetch_1.default)(`${project.endpoint}/v1/metadata`, {
+        const response = yield (0, isomorphic_fetch_1.default)(`${project.endpoint}/v1/metadata`, {
             headers: {
                 'content-type': 'application/json',
                 'x-hasura-admin-secret': adminSecret === null || adminSecret === void 0 ? void 0 : adminSecret.value
@@ -33479,12 +33480,11 @@ const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
             body: JSON.stringify({
                 type: 'bulk',
                 source: 'default',
-                resource_version: 3,
                 args: [
                     {
                         type: 'pg_add_source',
                         args: {
-                            name: 'default',
+                            name: databaseDisplayName,
                             configuration: {
                                 connection_info: {
                                     database_url: {
@@ -33505,7 +33505,10 @@ const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
                 ]
             }),
             method: 'POST'
-        });
+        }).then(r => r.json());
+        if (response.error) {
+            throw new Error(response.error);
+        }
     }
     else {
         context.logger.log(`Tenant ID not found. ${JSON.stringify(project, null, 2)}`);
