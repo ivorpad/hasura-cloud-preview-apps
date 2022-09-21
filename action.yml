@@ -20,6 +20,9 @@ inputs:
   hasuraProjectDirectoryPath:
     description: 'Path to the directory of the Hasura project in the repo. If empty, root is considered to be a Hasura project.'
     required: false
+  hasuraDatabaseDisplayName:
+    description: 'Database display name, normally the name of the database is "default"'
+    required: false
   hasuraEnv:
     description: 'Set of environment variables that you wish to provide to the created preview app. Example: HASURA_GRAPHQL_JWT_SECRET, PG_DATABASE_URL etc. Please note that this is different from the env vars of this action.'
     required: false
