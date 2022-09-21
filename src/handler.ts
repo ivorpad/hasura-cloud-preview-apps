@@ -48,9 +48,10 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
 
   const envVars = getHasuraEnvVars(core.getInput('hasuraEnv'))
   // if adminSecret is not found, make a request to get envVars
+  
   const adminSecret: {key: string; value: string} | undefined = envVars.find(
     e => e['key'] === 'HASURA_GRAPHQL_ADMIN_SECRET'
-  )
+  );
 
   const project = await getProjectByPk(
     previewAppCreationMetadata.projectId,
@@ -58,50 +59,57 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
   )
 
   const tenantId = project.tenant.id
-  const tenant = await getTenantEnvByTenantId(tenantId, context)
-  const adminSecretFromTenant = tenant.envVars.find(
-    e => e['key'] === 'HASURA_GRAPHQL_ADMIN_SECRET'
-  );
 
-  const postgresFromEnv: { key: string, value: string } | undefined = getHasuraEnvVars(core.getInput('hasuraEnv')).find(
-    e => e['key'] === 'PG_ENV_VARS_FOR_HASURA'
-  )
+  if (tenantId) {
+    const tenant = await getTenantEnvByTenantId(tenantId, context)
+    const adminSecretFromTenant = tenant.envVars.find(
+      e => e['key'] === 'HASURA_GRAPHQL_ADMIN_SECRET'
+    )
 
-  await fetch(`${project.endpoint}/v1/metadata`, {
-    headers: {
-      'content-type': 'application/json',
-      'x-hasura-admin-secret': adminSecretFromTenant
-    },
-    body: JSON.stringify({
-      type: 'bulk',
-      source: 'default',
-      resource_version: 3,
-      args: [
-        {
-          type: 'pg_add_source',
-          args: {
-            name: 'default',
-            configuration: {
-              connection_info: {
-                database_url: {
-                  from_env: postgresFromEnv?.value
+    const postgresFromEnv:
+      | {key: string; value: string}
+      | undefined = getHasuraEnvVars(core.getInput('hasuraEnv')).find(
+      e => e['key'] === 'PG_ENV_VARS_FOR_HASURA'
+    )
+
+    await fetch(`${project.endpoint}/v1/metadata`, {
+      headers: {
+        'content-type': 'application/json',
+        'x-hasura-admin-secret': adminSecretFromTenant
+      },
+      body: JSON.stringify({
+        type: 'bulk',
+        source: 'default',
+        resource_version: 3,
+        args: [
+          {
+            type: 'pg_add_source',
+            args: {
+              name: 'default',
+              configuration: {
+                connection_info: {
+                  database_url: {
+                    from_env: postgresFromEnv?.value
+                  },
+                  use_prepared_statements: false,
+                  isolation_level: 'read-committed'
                 },
-                use_prepared_statements: false,
-                isolation_level: 'read-committed'
+                read_replicas: null,
+                extensions_schema: null
               },
-              read_replicas: null,
-              extensions_schema: null
-            },
-            replace_configuration: false,
-            customization: {
-              naming_convention: 'hasura-default'
+              replace_configuration: false,
+              customization: {
+                naming_convention: 'hasura-default'
+              }
             }
           }
-        }
-      ]
-    }),
-    method: 'POST'
-  })
+        ]
+      }),
+      method: 'POST'
+    })
+  } else {
+    context.logger.log(`Tenant ID not found. ${JSON.stringify(project, null, 2)}`)
+  }
 
   context.logger.log(
     `Getting logs... ${previewAppCreationMetadata.githubDeploymentJobID}`

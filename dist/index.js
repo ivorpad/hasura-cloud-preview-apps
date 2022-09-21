@@ -29568,44 +29568,49 @@ const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
     const adminSecret = envVars.find(e => e['key'] === 'HASURA_GRAPHQL_ADMIN_SECRET');
     const project = yield (0, tasks_1.getProjectByPk)(previewAppCreationMetadata.projectId, context);
     const tenantId = project.tenant.id;
-    const tenant = yield (0, tasks_1.getTenantEnvByTenantId)(tenantId, context);
-    const adminSecretFromTenant = tenant.envVars.find(e => e['key'] === 'HASURA_GRAPHQL_ADMIN_SECRET');
-    const postgresFromEnv = (0, parameters_1.getHasuraEnvVars)(core.getInput('hasuraEnv')).find(e => e['key'] === 'PG_ENV_VARS_FOR_HASURA');
-    yield fetch(`${project.endpoint}/v1/metadata`, {
-        headers: {
-            'content-type': 'application/json',
-            'x-hasura-admin-secret': adminSecretFromTenant
-        },
-        body: JSON.stringify({
-            type: 'bulk',
-            source: 'default',
-            resource_version: 3,
-            args: [
-                {
-                    type: 'pg_add_source',
-                    args: {
-                        name: 'default',
-                        configuration: {
-                            connection_info: {
-                                database_url: {
-                                    from_env: postgresFromEnv === null || postgresFromEnv === void 0 ? void 0 : postgresFromEnv.value
+    if (tenantId) {
+        const tenant = yield (0, tasks_1.getTenantEnvByTenantId)(tenantId, context);
+        const adminSecretFromTenant = tenant.envVars.find(e => e['key'] === 'HASURA_GRAPHQL_ADMIN_SECRET');
+        const postgresFromEnv = (0, parameters_1.getHasuraEnvVars)(core.getInput('hasuraEnv')).find(e => e['key'] === 'PG_ENV_VARS_FOR_HASURA');
+        yield fetch(`${project.endpoint}/v1/metadata`, {
+            headers: {
+                'content-type': 'application/json',
+                'x-hasura-admin-secret': adminSecretFromTenant
+            },
+            body: JSON.stringify({
+                type: 'bulk',
+                source: 'default',
+                resource_version: 3,
+                args: [
+                    {
+                        type: 'pg_add_source',
+                        args: {
+                            name: 'default',
+                            configuration: {
+                                connection_info: {
+                                    database_url: {
+                                        from_env: postgresFromEnv === null || postgresFromEnv === void 0 ? void 0 : postgresFromEnv.value
+                                    },
+                                    use_prepared_statements: false,
+                                    isolation_level: 'read-committed'
                                 },
-                                use_prepared_statements: false,
-                                isolation_level: 'read-committed'
+                                read_replicas: null,
+                                extensions_schema: null
                             },
-                            read_replicas: null,
-                            extensions_schema: null
-                        },
-                        replace_configuration: false,
-                        customization: {
-                            naming_convention: 'hasura-default'
+                            replace_configuration: false,
+                            customization: {
+                                naming_convention: 'hasura-default'
+                            }
                         }
                     }
-                }
-            ]
-        }),
-        method: 'POST'
-    });
+                ]
+            }),
+            method: 'POST'
+        });
+    }
+    else {
+        context.logger.log(`Tenant ID not found. ${JSON.stringify(project, null, 2)}`);
+    }
     context.logger.log(`Getting logs... ${previewAppCreationMetadata.githubDeploymentJobID}`);
     const jobStatus = yield (0, tasks_1.getRealtimeLogs)(previewAppCreationMetadata.githubDeploymentJobID, context);
     if (jobStatus === 'failed') {
