@@ -33432,6 +33432,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.handler = void 0;
 const previewApps_1 = __nccwpck_require__(2461);
@@ -33439,7 +33442,7 @@ const tasks_1 = __nccwpck_require__(471);
 const utils_1 = __nccwpck_require__(6077);
 const parameters_1 = __nccwpck_require__(8185);
 const core = __importStar(__nccwpck_require__(6024));
-__nccwpck_require__(8024);
+const isomorphic_fetch_1 = __importDefault(__nccwpck_require__(8024));
 const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
     if (context.parameters.SHOULD_DELETE) {
         context.logger.log('Deleting Hasura Cloud preview app.');
@@ -33468,7 +33471,7 @@ const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
         //   e => e['key'] === 'HASURA_GRAPHQL_ADMIN_SECRET'
         // )
         const postgresFromEnv = (0, parameters_1.getHasuraEnvVars)(core.getInput('hasuraEnv')).find(e => e['key'] === 'PG_ENV_VARS_FOR_HASURA');
-        yield fetch(`${project.endpoint}/v1/metadata`, {
+        yield (0, isomorphic_fetch_1.default)(`${project.endpoint}/v1/metadata`, {
             headers: {
                 'content-type': 'application/json',
                 'x-hasura-admin-secret': adminSecret === null || adminSecret === void 0 ? void 0 : adminSecret.value

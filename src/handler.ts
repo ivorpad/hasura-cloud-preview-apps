@@ -9,7 +9,7 @@ import {getProjectByPk, getRealtimeLogs, getTenantEnvByTenantId} from './tasks'
 import {getOutputVars} from './utils'
 import {getHasuraEnvVars} from './parameters'
 import * as core from '@actions/core';
-require('isomorphic-fetch');
+import fetch from 'isomorphic-fetch';
 
 export const handler = async (context: Context): Promise<OutputVars | {}> => {
   if (context.parameters.SHOULD_DELETE) {
