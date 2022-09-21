@@ -33505,7 +33505,10 @@ const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
                 ]
             }),
             method: 'POST'
-        }).then(r => r.json());
+        }).then(r => {
+            context.logger.log(`Response:\n${JSON.stringify(r, null, 2)}`);
+            // return r.json()
+        });
         if (response.error) {
             throw new Error(response.error);
         }

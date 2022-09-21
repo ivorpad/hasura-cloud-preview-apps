@@ -110,7 +110,10 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
         ]
       }),
       method: 'POST'
-    }).then(r => r.json())
+    }).then(r => {
+      context.logger.log(`Response:\n${JSON.stringify(r, null, 2)}`)
+      // return r.json()
+    })
 
     if(response.error) {
       throw new Error(response.error)
