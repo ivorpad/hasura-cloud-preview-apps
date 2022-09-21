@@ -7,6 +7,8 @@ import {
 } from './previewApps'
 import {getRealtimeLogs} from './tasks'
 import {getOutputVars} from './utils'
+import { getHasuraEnvVars } from './parameters';
+import * as core from '@actions/core'
 
 export const handler = async (context: Context): Promise<OutputVars | {}> => {
   if (context.parameters.SHOULD_DELETE) {
@@ -27,18 +29,25 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
     `Scheduled creation of preview app:\n${JSON.stringify(createResp, null, 2)}`
   )
 
-  context.logger.log(`Polling the preview app creation status...`)
+  context.logger.log(`Polling the preview app creation status...`);
+
   const previewAppCreationMetadata = await pollPreviewAppCreationJob(
     context,
     createResp.githubPreviewAppJobID
   )
+  
+  context.logger.log(`Preview app creation metadata:\n${JSON.stringify(previewAppCreationMetadata, null, 2)}`);
 
-  context.logger.log(`Applying metadata and migrations from the branch...`)
+  context.logger.log(`Applying metadata and migrations from the branch...`);
+
+  const envVars = getHasuraEnvVars(core.getInput('hasuraEnv'));
+  context.logger.log(`Hasura env vars:\n${JSON.stringify(envVars, null, 2)}`);
 
   const jobStatus = await getRealtimeLogs(
     previewAppCreationMetadata.githubDeploymentJobID,
-    context
-  )
+    context,
+  );
+
   if (jobStatus === 'failed') {
     throw new Error(
       'Preview app has been created, but applying metadata and migrations failed'

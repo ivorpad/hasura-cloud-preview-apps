@@ -12543,6 +12543,29 @@ exports.errors = {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -12557,6 +12580,8 @@ exports.handler = void 0;
 const previewApps_1 = __nccwpck_require__(2461);
 const tasks_1 = __nccwpck_require__(471);
 const utils_1 = __nccwpck_require__(6077);
+const parameters_1 = __nccwpck_require__(8185);
+const core = __importStar(__nccwpck_require__(6024));
 const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
     if (context.parameters.SHOULD_DELETE) {
         context.logger.log('Deleting Hasura Cloud preview app.');
@@ -12570,7 +12595,10 @@ const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
     context.logger.log(`Scheduled creation of preview app:\n${JSON.stringify(createResp, null, 2)}`);
     context.logger.log(`Polling the preview app creation status...`);
     const previewAppCreationMetadata = yield (0, previewApps_1.pollPreviewAppCreationJob)(context, createResp.githubPreviewAppJobID);
+    context.logger.log(`Preview app creation metadata:\n${JSON.stringify(previewAppCreationMetadata, null, 2)}`);
     context.logger.log(`Applying metadata and migrations from the branch...`);
+    const envVars = (0, parameters_1.getHasuraEnvVars)(core.getInput('hasuraEnv'));
+    context.logger.log(`Hasura env vars:\n${JSON.stringify(envVars, null, 2)}`);
     const jobStatus = yield (0, tasks_1.getRealtimeLogs)(previewAppCreationMetadata.githubDeploymentJobID, context);
     if (jobStatus === 'failed') {
         throw new Error('Preview app has been created, but applying metadata and migrations failed');
