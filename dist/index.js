@@ -1,4 +1,4 @@
-require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
+/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
 /***/ 7351:
@@ -14014,7 +14014,12 @@ const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
         return deleteResp;
     }
     context.logger.log('Creating Hasura Cloud preview app.');
+<<<<<<< Updated upstream
     const createResp = yield previewApps_1.createPreviewApp(context);
+=======
+    context.logger.log(`Context:\n${JSON.stringify(context, null, 2)}`);
+    const createResp = yield (0, previewApps_1.createPreviewApp)(context);
+>>>>>>> Stashed changes
     context.logger.log(`Scheduled creation of preview app:\n${JSON.stringify(createResp, null, 2)}`);
     context.logger.log(`Polling the preview app creation status...`);
     const previewAppCreationMetadata = yield previewApps_1.pollPreviewAppCreationJob(context, createResp.githubPreviewAppJobID);
@@ -14210,7 +14215,12 @@ const getBaseParameters = () => ({
     GITHUB_REPO_NAME,
     GITHUB_OWNER,
     GITHUB_BRANCH_NAME,
+<<<<<<< Updated upstream
     HASURA_ENV_VARS: exports.getHasuraEnvVars(core.getInput('hasuraEnv')),
+=======
+    HASURA_ENV_VARS: (0, exports.getHasuraEnvVars)(core.getInput('hasuraEnv')),
+    HASURA_DATABASE_DISPLAY_NAME: core.getInput('hasuraDatabaseDisplayName') || '',
+>>>>>>> Stashed changes
     SHOULD_DELETE: [true, 'true'].includes(core.getInput('delete'))
 });
 const validateParameters = (params) => {
@@ -14257,6 +14267,7 @@ const getPostgresServerMetadata = (rawMetadata) => {
 };
 const getParameters = (logger, parameters = getBaseParameters()) => __awaiter(void 0, void 0, void 0, function* () {
     const postgresMetadata = getPostgresServerMetadata(core.getInput('postgresDBConfig'));
+    logger.log(`Parameters: ${(0, exports.getBaseParameters)()}`);
     // change db name for key 'PG_DATABASE_URL'
     const pgDbEnvEntry = parameters.HASURA_ENV_VARS.find(e => e.key === 'PG_DATABASE_URL');
     if (pgDbEnvEntry)
@@ -14487,6 +14498,21 @@ exports.pollPreviewAppCreationJob = exports.deletePreviewApp = exports.createPre
 const utils_1 = __nccwpck_require__(1314);
 const createPreviewApp = (context) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+<<<<<<< Updated upstream
+=======
+        const variables = {
+            githubDir: context.parameters.HASURA_PROJECT_DIR,
+            githubPAT: context.parameters.GITHUB_TOKEN,
+            githubRepoOwner: context.parameters.GITHUB_OWNER,
+            githubRepo: context.parameters.GITHUB_REPO_NAME,
+            githubBranch: context.parameters.GITHUB_BRANCH_NAME,
+            appName: context.parameters.NAME,
+            cloud: 'aws',
+            region: context.parameters.REGION,
+            plan: context.parameters.PLAN,
+            env: context.parameters.HASURA_ENV_VARS
+        };
+>>>>>>> Stashed changes
         const resp = yield context.client.query({
             query: `
         mutation createPreviewApp (
@@ -16939,4 +16965,3 @@ module.exports = JSON.parse('{"name":"pg","version":"8.7.1","description":"Postg
 /******/ 	
 /******/ })()
 ;
-//# sourceMappingURL=index.js.map

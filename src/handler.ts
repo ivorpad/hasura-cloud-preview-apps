@@ -19,6 +19,9 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
   }
 
   context.logger.log('Creating Hasura Cloud preview app.')
+  
+  context.logger.log(`Context:\n${JSON.stringify(context, null, 2)}`)
+
   const createResp = await createPreviewApp(context)
   context.logger.log(
     `Scheduled creation of preview app:\n${JSON.stringify(createResp, null, 2)}`

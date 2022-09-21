@@ -55,6 +55,7 @@ const getBaseParameters = () => ({
   GITHUB_OWNER,
   GITHUB_BRANCH_NAME,
   HASURA_ENV_VARS: getHasuraEnvVars(core.getInput('hasuraEnv')),
+  HASURA_DATABASE_DISPLAY_NAME: core.getInput('hasuraDatabaseDisplayName') || '',
   SHOULD_DELETE: [true, 'true'].includes(core.getInput('delete'))
 })
 
@@ -121,6 +122,8 @@ export const getParameters = async (
   const postgresMetadata = getPostgresServerMetadata(
     core.getInput('postgresDBConfig')
   )
+
+  logger.log(`Parameters: ${getBaseParameters()}`)
 
   // change db name for key 'PG_DATABASE_URL'
   const pgDbEnvEntry = parameters.HASURA_ENV_VARS.find(
