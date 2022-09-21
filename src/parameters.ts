@@ -43,7 +43,7 @@ export const getHasuraEnvVars = (rawEnvVars: string) => {
     .filter(env => !!env.key)
 }
 
-const getBaseParameters = () => ({
+export const getBaseParameters = () => ({
   PLAN: core.getInput('tier'),
   REGION: core.getInput('region'),
   NAME: core.getInput('name') || '',

@@ -15,6 +15,21 @@ export const createPreviewApp = async (
   context: Context
 ): Promise<CreatePreviewAppResponse['createGitHubPreviewApp']> => {
   try {
+    const variables = {
+      githubDir: context.parameters.HASURA_PROJECT_DIR,
+      githubPAT: context.parameters.GITHUB_TOKEN,
+      githubRepoOwner: context.parameters.GITHUB_OWNER,
+      githubRepo: context.parameters.GITHUB_REPO_NAME,
+      githubBranch: context.parameters.GITHUB_BRANCH_NAME,
+      appName: context.parameters.NAME,
+      cloud: 'aws',
+      region: context.parameters.REGION,
+      plan: context.parameters.PLAN,
+      env: context.parameters.HASURA_ENV_VARS
+    }
+
+    console.log("variables", JSON.stringify(variables, null, 2))
+
     const resp = await context.client.query<
       CreatePreviewAppResponse,
       CreatePreviewAppVariables
@@ -54,18 +69,7 @@ export const createPreviewApp = async (
           }
         }
       `,
-      variables: {
-        githubDir: context.parameters.HASURA_PROJECT_DIR,
-        githubPAT: context.parameters.GITHUB_TOKEN,
-        githubRepoOwner: context.parameters.GITHUB_OWNER,
-        githubRepo: context.parameters.GITHUB_REPO_NAME,
-        githubBranch: context.parameters.GITHUB_BRANCH_NAME,
-        appName: context.parameters.NAME,
-        cloud: 'aws',
-        region: context.parameters.REGION,
-        plan: context.parameters.PLAN,
-        env: context.parameters.HASURA_ENV_VARS
-      }
+      variables
     })
     return {
       ...resp.createGitHubPreviewApp
