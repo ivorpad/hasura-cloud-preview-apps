@@ -123,7 +123,7 @@ export const getParameters = async (
     core.getInput('postgresDBConfig')
   )
 
-  logger.log(`Parameters: ${getBaseParameters()}`)
+  logger.log(`Parameters: ${JSON.stringify(getBaseParameters(), null, 2)}`)
 
   // change db name for key 'PG_DATABASE_URL'
   const pgDbEnvEntry = parameters.HASURA_ENV_VARS.find(
