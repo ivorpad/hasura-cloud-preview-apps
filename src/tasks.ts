@@ -126,13 +126,6 @@ const getJobStatus = async (jobId: string, context: Context) => {
       }
     })
 
-    // const resp = await retrier
-    //   .resolve(attempt => request)
-    //   .then(
-    //     result => result,
-    //     error => console.error(error)
-    //   )
-
     context.logger.log(`Job Status: ${JSON.stringify(resp, null, 2)}`)
 
     if (!resp.jobs_by_pk) {

@@ -48,6 +48,7 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
 
   await getProjectByPk(previewAppCreationMetadata.projectId, context)
 
+  context.logger.log(`Getting logs... ${previewAppCreationMetadata.githubDeploymentJobID}`);
 
   const jobStatus = await getRealtimeLogs(
     previewAppCreationMetadata.githubDeploymentJobID,

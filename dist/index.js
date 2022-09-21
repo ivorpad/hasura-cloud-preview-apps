@@ -29567,6 +29567,7 @@ const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
     // if adminSecret is not found, make a request to get envVars
     const adminSecret = envVars.find(e => e["key"] === 'HASURA_GRAPHQL_ADMIN_SECRET');
     yield (0, tasks_1.getProjectByPk)(previewAppCreationMetadata.projectId, context);
+    context.logger.log(`Getting logs... ${previewAppCreationMetadata.githubDeploymentJobID}`);
     const jobStatus = yield (0, tasks_1.getRealtimeLogs)(previewAppCreationMetadata.githubDeploymentJobID, context);
     if (jobStatus === 'failed') {
         throw new Error('Preview app has been created, but applying metadata and migrations failed');
@@ -30344,12 +30345,6 @@ const getJobStatus = (jobId, context) => __awaiter(void 0, void 0, void 0, funct
                 jobId
             }
         });
-        // const resp = await retrier
-        //   .resolve(attempt => request)
-        //   .then(
-        //     result => result,
-        //     error => console.error(error)
-        //   )
         context.logger.log(`Job Status: ${JSON.stringify(resp, null, 2)}`);
         if (!resp.jobs_by_pk) {
             throw new Error('could not find the GitHub job; the associated deployment was terminated');
