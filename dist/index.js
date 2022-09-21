@@ -30321,7 +30321,7 @@ exports.getTenantEnvByTenantId = getTenantEnvByTenantId;
 const getJobStatus = (jobId, context) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     try {
-        const request = context.client.query({
+        const resp = yield context.client.query({
             query: `
         query getJobStatus($jobId: uuid!) {
           jobs_by_pk(id: $jobId) {
@@ -30344,9 +30344,12 @@ const getJobStatus = (jobId, context) => __awaiter(void 0, void 0, void 0, funct
                 jobId
             }
         });
-        const resp = yield retrier
-            .resolve(attempt => request)
-            .then(result => result, error => console.error(error));
+        // const resp = await retrier
+        //   .resolve(attempt => request)
+        //   .then(
+        //     result => result,
+        //     error => console.error(error)
+        //   )
         context.logger.log(`Job Status: ${JSON.stringify(resp, null, 2)}`);
         if (!resp.jobs_by_pk) {
             throw new Error('could not find the GitHub job; the associated deployment was terminated');

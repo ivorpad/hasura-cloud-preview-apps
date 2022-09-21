@@ -102,7 +102,7 @@ export const getTenantEnvByTenantId = async (
 
 const getJobStatus = async (jobId: string, context: Context) => {
   try {
-    const request = context.client.query<JobDetails, {jobId: string}>({
+    const resp = await context.client.query<JobDetails, {jobId: string}>({
       query: `
         query getJobStatus($jobId: uuid!) {
           jobs_by_pk(id: $jobId) {
@@ -126,12 +126,12 @@ const getJobStatus = async (jobId: string, context: Context) => {
       }
     })
 
-    const resp = await retrier
-      .resolve(attempt => request)
-      .then(
-        result => result,
-        error => console.error(error)
-      )
+    // const resp = await retrier
+    //   .resolve(attempt => request)
+    //   .then(
+    //     result => result,
+    //     error => console.error(error)
+    //   )
 
     context.logger.log(`Job Status: ${JSON.stringify(resp, null, 2)}`)
 
