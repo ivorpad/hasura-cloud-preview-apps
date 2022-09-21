@@ -1747,6 +1747,66 @@ exports.checkBypass = checkBypass;
 
 /***/ }),
 
+/***/ 2397:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+class Retrier {
+    constructor(opts = {}) {
+        this.opts = {};
+        this.attempt = 0;
+        this.opts.limit = opts.limit || 1;
+        this.opts.delay = opts.delay || 0;
+        this.opts.firstAttemptDelay = opts.firstAttemptDelay || 0;
+        this.opts.keepRetryingIf = opts.keepRetryingIf;
+        this.opts.stopRetryingIf = opts.stopRetryingIf;
+    }
+    resolve(fn) {
+        this.fn = fn;
+        return new Promise((resolve, reject) => {
+            this._resolve = resolve;
+            this._reject = reject;
+            this.attempt = 0;
+            this._doRetry();
+        });
+    }
+    _doRetry(recentError) {
+        if (this.attempt >= this.opts.limit) {
+            return this._reject(recentError || new Error('Retry limit reached!'));
+        }
+        setTimeout(() => {
+            const promise = this.fn(this.attempt);
+            if (!(promise instanceof Promise)) {
+                // TODO: throw error in contructor if params aren't valid
+                return this._reject(new Error('Expecting function which returns promise!'));
+            }
+            promise.then(response => {
+                if (this.opts.keepRetryingIf && this.opts.keepRetryingIf(response, this.attempt)) {
+                    this.attempt++;
+                    this._doRetry();
+                }
+                else {
+                    this._resolve(response);
+                }
+            }, error => {
+                if (this.opts.stopRetryingIf && this.opts.stopRetryingIf(error, this.attempt)) {
+                    this._reject(error);
+                }
+                else {
+                    this.attempt++;
+                    this._doRetry(error);
+                }
+            });
+        }, this.attempt === 0 ? this.opts.firstAttemptDelay : this.opts.delay);
+    }
+}
+exports.Retrier = Retrier;
+//# sourceMappingURL=retrier.js.map
+
+/***/ }),
+
 /***/ 3244:
 /***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
 
@@ -12598,7 +12658,9 @@ const handler = (context) => __awaiter(void 0, void 0, void 0, function* () {
     context.logger.log(`Preview app creation metadata:\n${JSON.stringify(previewAppCreationMetadata, null, 2)}`);
     context.logger.log(`Applying metadata and migrations from the branch...`);
     const envVars = (0, parameters_1.getHasuraEnvVars)(core.getInput('hasuraEnv'));
-    context.logger.log(`Hasura env vars:\n${JSON.stringify(envVars, null, 2)}`);
+    // if adminSecret is not found, make a request to get envVars
+    const adminSecret = envVars.find(e => e["key"] === 'HASURA_GRAPHQL_ADMIN_SECRET');
+    yield (0, tasks_1.getProjectByPk)(previewAppCreationMetadata.projectId, context);
     const jobStatus = yield (0, tasks_1.getRealtimeLogs)(previewAppCreationMetadata.githubDeploymentJobID, context);
     if (jobStatus === 'failed') {
         throw new Error('Preview app has been created, but applying metadata and migrations failed');
@@ -13265,8 +13327,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getRealtimeLogs = void 0;
+exports.getRealtimeLogs = exports.getTenantEnvByTenantId = exports.getProjectByPk = void 0;
 const utils_1 = __nccwpck_require__(6077);
+const retrier_1 = __nccwpck_require__(2397);
+const options = { limit: 5, delay: 2000 };
+const retrier = new retrier_1.Retrier(options);
 const getTaskName = (taskName) => {
     switch (taskName) {
         case 'gh-validation':
@@ -13291,10 +13356,64 @@ const getTaskStatus = (status) => {
     }
     return status;
 };
+const getProjectByPk = (projectId, context) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const resp = yield context.client.query({
+            query: `
+        query getProjectByPk($projectId: uuid!) {
+          projects_by_pk(id: $projectId) {
+            tenant {
+              id
+            }
+            endpoint
+            id
+          }
+        }
+      `,
+            variables: {
+                projectId
+            }
+        });
+        context.logger.log(`Project By PK: ${JSON.stringify(resp, null, 2)}`);
+        return resp.projects_by_pk;
+    }
+    catch (e) {
+        if (e instanceof Error) {
+            context.logger.log(e.message);
+        }
+        throw e;
+    }
+});
+exports.getProjectByPk = getProjectByPk;
+const getTenantEnvByTenantId = (tenantId, context) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const resp = yield context.client.query({
+            query: `
+        query getTenantEnv($tenandId: uuid!) {
+          getTenantEnv(tenantId: $tenandId) {
+            hash
+            envVars
+          }
+        }
+      `,
+            variables: {
+                tenantId
+            }
+        });
+        return resp.getTenantEnv;
+    }
+    catch (e) {
+        if (e instanceof Error) {
+            context.logger.log(e.message);
+        }
+        throw e;
+    }
+});
+exports.getTenantEnvByTenantId = getTenantEnvByTenantId;
 const getJobStatus = (jobId, context) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     try {
-        const resp = yield context.client.query({
+        const request = context.client.query({
             query: `
         query getJobStatus($jobId: uuid!) {
           jobs_by_pk(id: $jobId) {
@@ -13317,6 +13436,10 @@ const getJobStatus = (jobId, context) => __awaiter(void 0, void 0, void 0, funct
                 jobId
             }
         });
+        const resp = yield retrier
+            .resolve(attempt => request)
+            .then(result => result, error => console.error(error));
+        context.logger.log(`Job Status: ${JSON.stringify(resp, null, 2)}`);
         if (!resp.jobs_by_pk) {
             throw new Error('could not find the GitHub job; the associated deployment was terminated');
         }
