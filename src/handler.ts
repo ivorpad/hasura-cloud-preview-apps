@@ -5,10 +5,12 @@ import {
   deletePreviewApp,
   pollPreviewAppCreationJob
 } from './previewApps'
-import {getRealtimeLogs} from './tasks'
+import {getProjectByPk, getRealtimeLogs} from './tasks'
 import {getOutputVars} from './utils'
 import { getHasuraEnvVars } from './parameters';
-import * as core from '@actions/core'
+import * as core from '@actions/core';
+
+
 
 export const handler = async (context: Context): Promise<OutputVars | {}> => {
   if (context.parameters.SHOULD_DELETE) {
@@ -41,7 +43,11 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
   context.logger.log(`Applying metadata and migrations from the branch...`);
 
   const envVars = getHasuraEnvVars(core.getInput('hasuraEnv'));
-  context.logger.log(`Hasura env vars:\n${JSON.stringify(envVars, null, 2)}`);
+  // if adminSecret is not found, make a request to get envVars
+  const adminSecret: { key: string, value: string } | undefined = envVars.find(e => e["key"] === 'HASURA_GRAPHQL_ADMIN_SECRET');
+
+  await getProjectByPk(previewAppCreationMetadata.projectId, context)
+
 
   const jobStatus = await getRealtimeLogs(
     previewAppCreationMetadata.githubDeploymentJobID,

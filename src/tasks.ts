@@ -32,6 +32,74 @@ const getTaskStatus = (status: string) => {
   return status
 }
 
+export const getProjectByPk = async (projectId: string, context: Context) => {
+  try {
+    const resp = await context.client.query<
+      {
+        projects_by_pk: {endpoint: string, id: string; tenant: {id: string}}
+      },
+      {projectId: string}
+    >({
+      query: `
+        query getProjectByPk($projectId: uuid!) {
+          projects_by_pk(id: $projectId) {
+            tenant {
+              id
+            }
+            endpoint
+            id
+          }
+        }
+      `,
+      variables: {
+        projectId
+      }
+    });
+
+    context.logger.log(`Project By PK: ${JSON.stringify(resp, null, 2)}`)
+
+    return resp.projects_by_pk
+  } catch (e) {
+    if (e instanceof Error) {
+      context.logger.log(e.message)
+    }
+    throw e
+  }
+}
+
+export const getTenantEnvByTenantId = async (
+  tenantId: string,
+  context: Context
+) => {
+  try {
+    const resp = await context.client.query<{
+      getTenantEnv: {
+        hash: string
+        envVars: Record<any, any>
+      }
+    }, { tenantId: string }>({
+      query: `
+        query getTenantEnv($tenandId: uuid!) {
+          getTenantEnv(tenantId: $tenandId) {
+            hash
+            envVars
+          }
+        }
+      `,
+      variables: {
+        tenantId
+      }
+    })
+    return resp.getTenantEnv
+  } catch (e) {
+    if (e instanceof Error) {
+      context.logger.log(e.message)
+    }
+    throw e
+  }
+}
+
+
 const getJobStatus = async (jobId: string, context: Context) => {
   try {
     const request = context.client.query<JobDetails, {jobId: string}>({
@@ -62,9 +130,9 @@ const getJobStatus = async (jobId: string, context: Context) => {
       .resolve(attempt => request)
       .then(
         result => result,
-        error => console.error(error) // After 5 attempts logs: "Rejected!"
-      );
-      
+        error => console.error(error)
+      )
+
     context.logger.log(`Job Status: ${JSON.stringify(resp, null, 2)}`)
 
     if (!resp.jobs_by_pk) {
