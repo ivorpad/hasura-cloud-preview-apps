@@ -8,7 +8,8 @@ import {
 import {getProjectByPk, getRealtimeLogs, getTenantEnvByTenantId} from './tasks'
 import {getOutputVars} from './utils'
 import {getHasuraEnvVars} from './parameters'
-import * as core from '@actions/core'
+import * as core from '@actions/core';
+require('isomorphic-fetch');
 
 export const handler = async (context: Context): Promise<OutputVars | {}> => {
   if (context.parameters.SHOULD_DELETE) {
@@ -58,7 +59,10 @@ export const handler = async (context: Context): Promise<OutputVars | {}> => {
     context
   )
 
-  const tenantId = project.tenant.id
+  const tenantId = project.tenant.id;
+
+  context.logger.log(`Tenant:\n${JSON.stringify(tenantId, null, 2)}`)
+  context.logger.log(`Project:\n${JSON.stringify(project, null, 2)}`)
 
   if (tenantId) {
     // const tenant = await getTenantEnvByTenantId(tenantId, context)
